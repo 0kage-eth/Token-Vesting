@@ -256,7 +256,6 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         returns (uint256)
     {
         uint256 currentTime = block.timestamp;
-
         // if contract is within cliff -> nothing is vested
         // if contract status is revoked - no further vesting
         // in both cases, just simply return 0
@@ -350,6 +349,12 @@ contract TokenVesting is Ownable, ReentrancyGuard {
 
     function getTotalVestedAmount() public view returns (uint256 total) {
         total = s_totalVested;
+    }
+
+    function getReleasableAmount(bytes32 id) public view returns (uint256 amount) {
+        VestingSchedule memory schedule = getVestingSchedule(id);
+
+        return computeReleasableAmount(schedule);
     }
 
     /**

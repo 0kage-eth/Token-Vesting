@@ -703,6 +703,33 @@ import { shiftTime } from "../../utils/shiftTime"
                   )
               })
 
+              it("revoke before cliff ends", async () => {
+                  const id = await tokenVestingContract.getId(beneficiary.address, 0)
+                  const timeTx = await shiftTime(cliff / 2)
+
+                  const revokeTx = await tokenVestingContract.revoke(id)
+                  revokeTx.wait(1)
+
+                  // total vested should go to zero -> part of amount is released, other part is unvested
+                  const totalVested = await tokenVestingContract.getTotalVestedAmount()
+                  expect(totalVested).equals(
+                      0,
+                      "Total Vested Amount after revocation should be 0 for single schedule"
+                  )
+
+                  // revoke status should be true
+
+                  const vestingSchedule = await tokenVestingContract.getVestingSchedule(id)
+                  expect(vestingSchedule.revoked, "vesting revoke status must be true")
+
+                  // released amount should be half of vested amount
+                  expect(vestingSchedule.released).equals(
+                      0,
+                      "vested amount released = 0 before cliff ends"
+                  )
+              })
+
+              // revoke before cliff period ends -> released amount = 0, total
               // shift time to midpoint -> half amount should be released
               it("revoke at midpoint", async () => {
                   const id = await tokenVestingContract.getId(beneficiary.address, 0)
@@ -839,10 +866,74 @@ import { shiftTime } from "../../utils/shiftTime"
                   ).to.be.revertedWith("Tokens specified are more than your vested balance")
                   //   await creatScheduleTx.wait(1)
               })
+              // Release within cliff period -> amount released = 0
+              it("release within cliff period", async () => {
+                  const id = await tokenVestingContract.getId(beneficiary.address, 0)
+                  const timeTx = await shiftTime(cliff / 2) // time within cliff period
+
+                  const tx = await tokenVestingContract.release(id, vestedAmount1.div(2))
+                  await tx.wait(1)
+
+                  const vestedSchedule = await tokenVestingContract.getVestingSchedule(id)
+                  expect(vestedSchedule.released).equals(
+                      0,
+                      "Amount released should be 0 within cliff period"
+                  )
+              })
+
               // schedule.released should increase by amount released
+              it("release amount in schedule should increase by amount released", async () => {
+                  const id = await tokenVestingContract.getId(beneficiary.address, 0)
+                  const timeTx = await shiftTime(duration / 2)
+
+                  const tx = await tokenVestingContract.release(id, vestedAmount1.div(2))
+                  await tx.wait(1)
+
+                  const vestedSchedule = await tokenVestingContract.getVestingSchedule(id)
+                  expect(vestedSchedule.released).equals(
+                      vestedAmount1.div(2),
+                      "Amount released should reflect in vesting schedule"
+                  )
+              })
 
               // total vested should reduce
+              it("total vested should reduce after release", async () => {
+                  const id = await tokenVestingContract.getId(beneficiary.address, 0)
+                  const timeTx = await shiftTime(duration / 2)
+
+                  const totalVestedBefore = await tokenVestingContract.getTotalVestedAmount()
+                  expect(totalVestedBefore).equals(
+                      vestedAmount1,
+                      "Total vested should equal vested amount before release"
+                  )
+                  const tx = await tokenVestingContract.release(id, vestedAmount1.div(2))
+                  await tx.wait(1)
+
+                  const vestedSchedule = await tokenVestingContract.getVestingSchedule(id)
+                  const totalVestedAfter = await tokenVestingContract.getTotalVestedAmount()
+
+                  expect(totalVestedAfter).equals(
+                      vestedAmount1.div(2),
+                      "Total vested should equal 50% of initial vested amount after release"
+                  )
+              })
 
               // balance of beneficiary account should increase by released amount
+              it("withdrawal balance of beneficiary should increase by released amount", async () => {
+                  const id = await tokenVestingContract.getId(beneficiary.address, 0)
+                  const timeTx = await shiftTime(duration / 2)
+
+                  const tokenBalanceBefore = await zKageContract.balanceOf(beneficiary.address)
+                  const releaseAmount = vestedAmount1.div(2)
+                  const tx = await tokenVestingContract.release(id, releaseAmount)
+                  await tx.wait(1)
+
+                  const tokenBalanceAfter = await zKageContract.balanceOf(beneficiary.address)
+
+                  expect(tokenBalanceAfter).equals(
+                      tokenBalanceBefore.add(releaseAmount),
+                      "Token balance of beneficiary should increase by amount released"
+                  )
+              })
           })
       })
