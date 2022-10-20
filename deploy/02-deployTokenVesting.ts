@@ -11,7 +11,7 @@ const deployTokenVesting = async () => {
         networkConfig[network.config.chainId || 31337].blockConfirmations || 1
 
     if (developmentChains.includes(network.name)) {
-        log("Local network detected. Assing zKage mock contract address")
+        log("Local network detected. Assigninng zKage mock contract address")
         const zkageContract = await ethers.getContract("ZeroKageMock")
         zKageAddress = zkageContract.address
     } else {
@@ -27,6 +27,9 @@ const deployTokenVesting = async () => {
     })
     log("Token Vesting Contract deployed successfully....")
     log("----------------------")
+
+    // if local chain -> fund 100,000 tokens to this vesting contract
+    log("Funding token vesting contract with 100,000 0Kage")
 
     if (!developmentChains.includes(network.name)) {
         log("Non development chain detected.. sending for verification")

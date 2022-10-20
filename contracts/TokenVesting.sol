@@ -48,6 +48,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         uint256 released;
         // vesting revoked or not
         bool revoked;
+        // identifier
+        uint8 identifier; // identifier that helps us separate schedules for a single beneficiary
     }
 
     //********* CUSTOM ERRORS **************/
@@ -130,7 +132,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         uint256 duration,
         uint256 vestingCycle,
         bool revocable,
-        uint256 vestedAmount
+        uint256 vestedAmount,
+        uint8 identifier
     ) public onlyOwner {
         //**** error checks */
 
@@ -165,7 +168,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
             revocable,
             vestedAmount,
             0,
-            false
+            false,
+            identifier
         );
 
         s_totalVested = s_totalVested.add(vestedAmount);
@@ -217,6 +221,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
 
         // compute vested amount that is releasable
         uint256 vestedAmount = computeReleasableAmount(schedule);
+
+        require(vestedAmount > 0, "No vested tokens as on date");
 
         // amount cannot be more than vested amount against this vesting schedule
         require(vestedAmount >= amount, "Tokens specified are more than your vested balance");
@@ -341,6 +347,31 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         returns (VestingSchedule memory vestingSchedule)
     {
         vestingSchedule = s_vestingSchedules[id];
+    }
+
+    function getVestingScheduleForBeneficiary(address beneficiary)
+        public
+        view
+        returns (VestingSchedule[] memory vestingSchedule)
+    {
+        uint32 count = getCountPerBeneficiary(beneficiary);
+        vestingSchedule = new VestingSchedule[](count);
+
+        for (uint32 i = 0; i < count; i++) {
+            bytes32 id = getId(beneficiary, i);
+            vestingSchedule[i] = s_vestingSchedules[id];
+        }
+    }
+
+    function getVestingScheduleForBeneficiaryAndIndex(address beneficiary, uint8 index)
+        public
+        view
+        returns (VestingSchedule memory vestingSchedule)
+    {
+        uint32 count = getCountPerBeneficiary(beneficiary);
+        require(index < count, "Index out of range");
+        bytes32 id = getId(beneficiary, index);
+        vestingSchedule = getVestingSchedule(id);
     }
 
     function getId(address beneficiary, uint32 index) public view returns (bytes32 id) {

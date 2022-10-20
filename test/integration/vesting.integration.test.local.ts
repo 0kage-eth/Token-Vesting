@@ -67,7 +67,8 @@ import { shiftTimeToWithoutMiningBlock } from "../../utils/shiftTime"
                   duration1,
                   vestingCycle1,
                   true,
-                  vestedAmount1
+                  vestedAmount1,
+                  0
               )
 
               const createTx2 = await tokenVestingContract.createVestingSchedule(
@@ -77,7 +78,8 @@ import { shiftTimeToWithoutMiningBlock } from "../../utils/shiftTime"
                   duration2,
                   vestingCycle2,
                   true,
-                  vestedAmount2
+                  vestedAmount2,
+                  0
               )
 
               // STEP 4 -> Let 3 months pass (cliff 2). Calculate vested amounts in both schedules

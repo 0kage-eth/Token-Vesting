@@ -4,7 +4,7 @@ import { BigNumber, Signer } from "ethers"
 import { ethers, getNamedAccounts, network, deployments } from "hardhat"
 import { developmentChains, networkConfig } from "../../helper-hardhat-config"
 import { TokenVesting, ZeroKageMock } from "../../typechain-types"
-import { shiftTime } from "../../utils/shiftTime"
+import { shiftTime, shiftTimeToWithoutMiningBlock } from "../../utils/shiftTime"
 
 !developmentChains.includes(network.name)
     ? describe.skip
@@ -75,7 +75,8 @@ import { shiftTime } from "../../utils/shiftTime"
                           duration,
                           vestingCycle,
                           true,
-                          higherAmount
+                          higherAmount,
+                          0
                       )
                   )
                       .to.be.revertedWithCustomError(
@@ -99,7 +100,8 @@ import { shiftTime } from "../../utils/shiftTime"
                           0,
                           vestingCycle,
                           true,
-                          vestedAmount
+                          vestedAmount,
+                          0
                       )
                   ).to.be.revertedWith("Invalid vesting duration. Enter valid value in seconds")
                   //   await creatScheduleTx.wait(1)
@@ -118,6 +120,7 @@ import { shiftTime } from "../../utils/shiftTime"
                           duration,
                           vestingCycle,
                           true,
+                          0,
                           0
                       )
                   ).to.be.revertedWith("Invalid vesting amount. Enter value > 0")
@@ -137,7 +140,8 @@ import { shiftTime } from "../../utils/shiftTime"
                           duration,
                           0,
                           true,
-                          vestedAmount
+                          vestedAmount,
+                          0
                       )
                   ).to.be.revertedWith("Invalid vesting time interval in seconds")
               })
@@ -157,7 +161,8 @@ import { shiftTime } from "../../utils/shiftTime"
                               duration,
                               vestingCycle,
                               true,
-                              vestedAmount
+                              vestedAmount,
+                              0
                           )
                   ).to.be.revertedWith("Ownable: caller is not the owner")
               })
@@ -174,7 +179,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount
+                      vestedAmount,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -199,7 +205,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount
+                      vestedAmount,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -220,7 +227,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount
+                      vestedAmount,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -244,7 +252,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount
+                      vestedAmount,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -270,7 +279,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount
+                      vestedAmount,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -322,7 +332,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount1
+                      vestedAmount1,
+                      0
                   )
                   await createTx.wait(1)
               })
@@ -340,7 +351,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount2
+                      vestedAmount2,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -361,7 +373,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount2
+                      vestedAmount2,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -390,7 +403,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount2
+                      vestedAmount2,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -419,7 +433,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount2
+                      vestedAmount2,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -445,7 +460,8 @@ import { shiftTime } from "../../utils/shiftTime"
                           duration,
                           vestingCycle,
                           true,
-                          higherAmount
+                          higherAmount,
+                          0
                       )
                   )
                       .to.be.revertedWithCustomError(
@@ -494,7 +510,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount1
+                      vestedAmount1,
+                      0
                   )
                   await createTx.wait(1)
               })
@@ -512,7 +529,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount2
+                      vestedAmount2,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -533,7 +551,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount2
+                      vestedAmount2,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -570,7 +589,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount2
+                      vestedAmount2,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -599,7 +619,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount2
+                      vestedAmount2,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -625,7 +646,8 @@ import { shiftTime } from "../../utils/shiftTime"
                           duration,
                           vestingCycle,
                           true,
-                          higherAmount
+                          higherAmount,
+                          0
                       )
                   )
                       .to.be.revertedWithCustomError(
@@ -672,7 +694,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount1
+                      vestedAmount1,
+                      0
                   )
                   await createTx.wait(1)
               })
@@ -693,7 +716,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       false,
-                      vestedAmount1
+                      vestedAmount1,
+                      0
                   )
                   await createTx.wait(1)
 
@@ -816,7 +840,8 @@ import { shiftTime } from "../../utils/shiftTime"
                       duration,
                       vestingCycle,
                       true,
-                      vestedAmount1
+                      vestedAmount1,
+                      0
                   )
                   await createTx.wait(1)
               })
@@ -869,16 +894,11 @@ import { shiftTime } from "../../utils/shiftTime"
               // Release within cliff period -> amount released = 0
               it("release within cliff period", async () => {
                   const id = await tokenVestingContract.getId(beneficiary.address, 0)
-                  const timeTx = await shiftTime(cliff / 2) // time within cliff period
+                  const timeTx = await shiftTimeToWithoutMiningBlock(currentTime + cliff / 2) // time within cliff period
 
-                  const tx = await tokenVestingContract.release(id, vestedAmount1.div(2))
-                  await tx.wait(1)
-
-                  const vestedSchedule = await tokenVestingContract.getVestingSchedule(id)
-                  expect(vestedSchedule.released).equals(
-                      0,
-                      "Amount released should be 0 within cliff period"
-                  )
+                  await expect(
+                      tokenVestingContract.release(id, vestedAmount1.div(2))
+                  ).to.be.revertedWith("No vested tokens as on date")
               })
 
               // schedule.released should increase by amount released
