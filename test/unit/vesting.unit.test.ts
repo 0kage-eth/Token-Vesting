@@ -956,4 +956,99 @@ import { shiftTime, shiftTimeToWithoutMiningBlock } from "../../utils/shiftTime"
                   )
               })
           })
+
+          describe("event emission testing", () => {
+              let currentTime: number
+              let duration: number
+              let vestingCycle: number
+              let cliff: number
+              let vestedAmount: BigNumber
+
+              beforeEach(async () => {
+                  // fund 250k 0Kage from owner to token vesting contract
+                  const funding = ethers.utils.parseEther("250000")
+                  const transferTx = await zKageContract.transfer(
+                      tokenVestingContract.address,
+                      funding
+                  )
+                  await transferTx.wait(1)
+
+                  // create a new schedule
+                  const currentBlockNum = await ethers.provider.getBlockNumber()
+                  currentTime = (await ethers.provider.getBlock(currentBlockNum)).timestamp
+                  duration = 3 * 365 * 24 * 60 * 60 // 3 years
+                  vestingCycle = 30 * 24 * 60 * 60 // 30 days
+                  cliff = 180 * 24 * 60 * 60 // 6 months  cliff
+                  vestedAmount = funding
+              })
+
+              // 1.  emit CreateSchedule event when a new schedule is created
+              it("emit create schedule event", async () => {
+                  await expect(
+                      tokenVestingContract.createVestingSchedule(
+                          beneficiary.address,
+                          currentTime,
+                          cliff,
+                          duration,
+                          vestingCycle,
+                          true,
+                          vestedAmount,
+                          0
+                      )
+                  )
+                      .to.emit(tokenVestingContract, "CreateSchedule")
+                      .withArgs(beneficiary.address, 0, vestedAmount)
+                  //   await creatScheduleTx.wait(1)
+              })
+
+              // 2.  emit revokeSchedule event when a schedule is revoked
+              it("emit revoke schedule event", async () => {
+                  const createTx = await tokenVestingContract.createVestingSchedule(
+                      beneficiary.address,
+                      currentTime,
+                      cliff,
+                      duration,
+                      vestingCycle,
+                      true,
+                      vestedAmount,
+                      0
+                  )
+                  await createTx.wait(1)
+
+                  await shiftTimeToWithoutMiningBlock(currentTime + duration / 2)
+
+                  const id = await tokenVestingContract.getId(beneficiary.address, 0)
+
+                  // 50% of vesting allocation is returned, 50% is released to beneficiary
+
+                  await expect(tokenVestingContract.revoke(id))
+                      .to.emit(tokenVestingContract, "RevokeSchedule")
+                      .withArgs(beneficiary.address, 0, vestedAmount.div(2), vestedAmount.div(2))
+              })
+
+              // 3. emit release Schedule event when a schedule is released
+              it("emit release schedule event", async () => {
+                  const createTx = await tokenVestingContract.createVestingSchedule(
+                      beneficiary.address,
+                      currentTime,
+                      cliff,
+                      duration,
+                      vestingCycle,
+                      true,
+                      vestedAmount,
+                      0
+                  )
+                  await createTx.wait(1)
+
+                  await shiftTimeToWithoutMiningBlock(currentTime + duration / 2)
+
+                  const id = await tokenVestingContract.getId(beneficiary.address, 0)
+
+                  // 25% of vesting allocation is released
+
+                  await expect(tokenVestingContract.release(id, vestedAmount.div(4)))
+                      .to.emit(tokenVestingContract, "ReleaseSchedule")
+                      .withArgs(beneficiary.address, 0, owner.address, vestedAmount.div(4))
+              })
+          })
       })

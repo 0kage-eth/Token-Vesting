@@ -13,11 +13,11 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    // create a struct for vesting schedule
+    // Contract developed by 0Kage (https://github.com/0kage-eth/Token-Vesting)
 
     /**
      * @notice token vesting contract - generic template based on openzeppelin token vesting contract
-     * @notice this contract is general purpose & can handle multiple vesting schedules for multiple addresses
+     * @notice this contract is general purpose & can handle multiple vesting schedules for multiple addresses simultaneously
      * @dev general functionality
      *      - Create Vesting Schedule
      *      - Revoke Vesting Schedule
@@ -27,6 +27,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
      *
      * @notice this can be used to vest founders, advisors, investors etc
      */
+
+    // create a struct for vesting schedule
     struct VestingSchedule {
         // valid schedule only if initialized flag is TRUE
         bool initialized;
@@ -50,6 +52,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         bool revoked;
         // identifier
         uint8 identifier; // identifier that helps us separate schedules for a single beneficiary
+        // identifier is used by dapp front end to identify & separate multiple schedules for same beneficiary
     }
 
     //********* CUSTOM ERRORS **************/
@@ -59,10 +62,21 @@ contract TokenVesting is Ownable, ReentrancyGuard {
 
     //************ EVENTS ***************/
 
-    event NewSchedule();
-    event RevokeSchedule();
-    event ReleaseSchedule();
+    event CreateSchedule(address beneficiary, uint32 identifier, uint256 vested);
+    event RevokeSchedule(
+        address beneficiary,
+        uint32 identifier,
+        uint256 unvested,
+        uint256 released
+    );
+    event ReleaseSchedule(
+        address beneficiary,
+        uint32 identifier,
+        address releaser,
+        uint256 released
+    );
 
+    //----------------------------------/
     // ERC20 token that will be vested
     IERC20 private immutable i_token;
 
@@ -175,6 +189,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         s_totalVested = s_totalVested.add(vestedAmount);
         s_vestingScheduleIds.push(id);
         s_vestingSchedulesPerUser[beneficiary] += 1;
+
+        emit CreateSchedule(beneficiary, identifier, vestedAmount);
     }
 
     function revoke(bytes32 vestingScheduleId)
@@ -204,6 +220,13 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         // finally, set revoke status to true - this prevents further calculation of vesting amount
         // for all purposes - this schedule is closed
         schedule.revoked = true;
+
+        emit RevokeSchedule(
+            schedule.beneficiary,
+            schedule.identifier,
+            unvestedAmount,
+            schedule.released
+        );
     }
 
     function release(bytes32 vestingScheduleId, uint256 amount)
@@ -238,6 +261,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
 
         // safe transfer of tokens from current address to beneficiary
         i_token.safeTransfer(payableBeneficiary, amount);
+
+        emit ReleaseSchedule(schedule.beneficiary, schedule.identifier, msg.sender, amount);
     }
 
     function withdraw(uint256 amount) public onlyOwner nonReentrant {
