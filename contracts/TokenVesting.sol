@@ -325,7 +325,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     }
 
     function getVestingScheduleIdForAddressAndIndex(address beneficiary, uint32 index)
-        internal
+        public
         view
         returns (bytes32 id)
     {
@@ -333,7 +333,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     }
 
     function getVestingScheduleForAddressAndIndex(address beneficiary, uint32 index)
-        internal
+        public
         view
         returns (VestingSchedule memory schedule)
     {
@@ -408,6 +408,35 @@ contract TokenVesting is Ownable, ReentrancyGuard {
             beneficiary,
             s_vestingSchedulesPerUser[beneficiary]
         );
+    }
+
+    /**
+     * @notice function gets the key metrics for beneficiary across all schedules
+     * @param beneficiary beneficiary address for vesting
+     * @return totalAllocated total vested to beneficiary across all schedules
+     * @return totalPending releasable tokens as on date for beneficiary across all schedules
+     * @return totalReleased tokens released from start to current date for beneficiary across all schedules
+     */
+    function getAllVestingMetcis(address beneficiary)
+        public
+        view
+        returns (
+            uint256 totalAllocated,
+            uint256 totalPending,
+            uint256 totalReleased
+        )
+    {
+        uint32 count = getCountPerBeneficiary(beneficiary);
+
+        VestingSchedule[] memory schedules = new VestingSchedule[](count);
+
+        schedules = getVestingScheduleForBeneficiary(beneficiary);
+
+        for (uint32 indx = 0; indx < count; indx++) {
+            totalAllocated += schedules[indx].allocated;
+            totalReleased += schedules[indx].released;
+            totalPending += computeReleasableAmount(schedules[indx]);
+        }
     }
 
     function getTokenAddress() public view returns (address tokenAddress) {
