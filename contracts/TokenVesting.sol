@@ -232,7 +232,6 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     function release(bytes32 vestingScheduleId, uint256 amount)
         public
         vestingScheduleNotRevoked(vestingScheduleId)
-        nonReentrant
     {
         VestingSchedule storage schedule = s_vestingSchedules[vestingScheduleId];
 
